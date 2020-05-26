@@ -55,55 +55,144 @@ class Student:
             raise DoesNotExist
         elif len(obj)==1:
             c=Student(obj[0][1],obj[0][2],obj[0][3])
-            c.student_id=obj[0][0]
+class DoesNotExist(Exception):
+    pass
+
+class MultipleObjectsReturned(Exception):
+    pass
+
+class InvalidField(Exception):
+    pass
+
+
+class Student:
+    
+    def __init__(self,name,age,score):
+        self.name = name
+        self.age = age
+        self.score = score
+        self.student_id = None
+    
+    def __repr__(self):
+        return "Student(student_id={0}, name={1}, age={2}, score={3})".format(
+            self.student_id,
+            self.name,
+            self.age,
+            self.score)
+     
+     
+    def delete(self):
+        sql_query = ("DELETE from Student where student_id = {}".format(self.student_id))
+        write_data(sql_query)
+        
+    @classmethod 
+    def get(cls,**keys):
+        
+        for k,v in keys.items():
+            cls.a = k
+            cls.b = v
+            if str(k) not in ('name','age','score','student_id'):
+                raise InvalidField
+        
+        
+        sql_query = f"select * from Student where {cls.a} = '{cls.b}'"
+        
+        obj = read_data(sql_query)
+        
+        if len(obj) > 1 :
+            raise MultipleObjectsReturned
+            
+        if len(obj) == 0 :
+            raise DoesNotExist
+        
+        if len(obj) == 1:
+            c = Student(obj[0][1], obj[0][2], obj[0][3])
+            c.student_id = obj[0][0]
             return c
+    
+    def save(self):
+        if self.student_id == None :
+            sql_query =("INSERT INTO Student(name,age,score) VALUES('{}',{},{})".format(self.name,self.age,self.score))
+            write_data(sql_query)
+            q1 = "select student_id from student where name = '{}' and age = {} and score = {}".format(self.name, self.age, self.score)
+            a = read_data(q1)
+            self.student_id = a[0][0]
+        else:
+            sql_query = (f"UPDATE Student SET name = \'{self.name}\',age = {self.age},score = {self.score} WHERE student_id = {self.student_id}")
+            write_data(sql_query)
+            
+        q = "select student_id from Student where student_id = {}".format(self.student_id)
+        ans = read_data(q)
+        if len(ans) == 0:
+            q = "INSERT INTO Student(student_id,name,age,score) VALUES({},'{}',{},{})".format(self.student_id, self.name, self.age, self.score)
+            write_data(q)
+    
     @classmethod
     def filter(cls,**keys):
-        for x,y in keys.items():
-            cls.a = x
-            cls.b = y
-            l=(cls.a).split('__')
-            l1 = l[0]
-            if l[0] not in ('name','age','score','student_id'):
-                raise InvalidField
-        List = []
-        if cls.a == 'age' or cls.a == 'name' or cls.a == 'score' or cls.a == 'student_id':
-            query = "select * from Student where {} = '{}'".format(cls.a,cls.b)
-            obj = read_data(query)
-
-        elif l[1] == 'lt':
-            query = "select * from Student where {} < {}".format(l1,cls.b)
-            obj = read_data(query)
-            
-        elif l[1] == 'lte':
-            query = "select * from Student where {} <= {}".format(l1,cls.b)
-            obj = read_data(query)
-            
-        elif l[1] == 'gt':
-            query = "select * from Student where {} > {}".format(l1,cls.b)
-            obj = read_data(query)
-            
-        elif l[1] == 'gte':
-            query = "select * from Student where {} >= {}".format(l1,cls.b)
-            obj = read_data(query)
-            
-        elif l[1] == 'neq':
-            query = "select * from Student where {} != '{}'".format(l1,cls.b)
-            obj = read_data(query)
-            
-        elif l[1] == 'in':
-            query = "select * from Student where {} IN {}".format(l1,tuple(cls.b))
-            obj = read_data(query)
-            
-        elif l[1] == 'contains':
-            query = "select * from Student where {} LIKE '%{}%'".format(l1,cls.b)
-            obj = read_data(query)
-        for i  in obj:
-            c = Student(i[1],i[2],i[3])
-            c.student_id=i[0]
-            List.append(c)
-        return List
         
+        
+        
+        for k,v in keys.items():
+            keys = k
+            value = v
+        
+            field_name = (keys).split("__")
+        
+            if field_name[0] not in ('age','name','score','student_id'):
+                raise InvalidField
+            
+        
+        
+            if len(field_name) == 1 :
+                q = " select * from Student Where {} = '{}' ".format(field_name[0],v)
+                ans = read_data(q)
+            
+                
+            elif len(field_name) > 1:
+                if field_name[1] == "lt":
+                    q = " select * from Student Where {} < {} ".format(field_name[0], v)
+                    ans = read_data(q)
+                        
+                        
+                elif field_name[1] == "lte" :
+                    q = " select * from Student Where {} <= {} ".format(field_name[0], v)
+                    ans = read_data(q)
+                        
+                    
+                elif field_name[1] == "gt" :
+                    q = " select * from Student Where {} > {} ".format(field_name[0], v)
+                    ans = read_data(q)
+                    
+                    
+                elif field_name[1] == "gte" :
+                    q = " select * from Student Where {} >={} ".format(field_name[0], v)
+                    ans = read_data(q)
+                        
+                elif field_name[1] == "neq" :
+                    q = " select * from Student Where {} != '{}' ".format(field_name[0], v)
+                    ans = read_data(q)
+                    
+                elif field_name[1] == "in":
+                    q = " select * from Student Where {} in {} ".format(field_name[0],tuple(v))
+                    ans = read_data(q)
+                    
+                elif field_name[1] == "contains" :
+                    q = " select * from Student Where {} Like '%{}%' ".format(field_name[0],(v))
+                    ans = read_data(q)
+            
+            l = []
+           
+            if len(ans) != 0:
+                for i in ans:
+                    c = Student(i[1],i[2],i[3])
+                    c.student_id = i[0]
+                    l.append(c)
+            else:
+                return l
+                    
+                    
+        return l
+
 def write_data(sql_query):
 	import sqlite3
 	connection = sqlite3.connect("selected_students.sqlite3")
@@ -121,3 +210,5 @@ def read_data(sql_query):
 	ans= crsr.fetchall()  
 	connection.close() 
 	return ans
+
+
