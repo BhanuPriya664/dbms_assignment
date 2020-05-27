@@ -1,0 +1,189 @@
+class DoesNotExist(Exception):
+    pass
+
+class MultipleObjectsReturned(Exception):
+    pass
+
+class InvalidField(Exception):
+    pass
+
+
+class Student:
+    
+    def __init__(self,name,age,score):
+        self.name = name
+        self.age = age
+        self.score = score
+        self.student_id = None
+        
+    def __repr__(self):
+        return "Student(student_id={0}, name={1}, age={2}, score={3})".format(
+            self.student_id,
+            self.name,
+            self.age,
+            self.score)
+
+    
+    @classmethod
+    def filter(cls, **keys):
+        
+        if len(keys) >= 1:
+            l = []
+            cls.operation = {"lt":'<', "lte": '<=', "gt": '>', "gte": '>=' , "neq": '!='}
+            for k,v in keys.items():
+                keys12 = k
+                value = v
+            
+                field_name = (keys12).split("__")
+            
+                if field_name[0] not in ('age','name','score','student_id'):
+                    raise InvalidField
+                
+                if len(field_name) == 1 :
+                    q = " {} = '{}' ".format(field_name[0], v)
+                
+                    
+                elif field_name[1] == "lt":
+                    q = " {} < {} ".format(field_name[0], v)
+                        
+                            
+                elif field_name[1] == "lte" :
+                    q = " {} <= {} ".format(field_name[0], v)
+                        
+                        
+                elif field_name[1] == "gt" :
+                    q = " {} > {} ".format(field_name[0], v)
+                        
+                        
+                        
+                elif field_name[1] == "gte" :
+                    q = "  {} >={} ".format(field_name[0], v)
+                        
+                            
+                elif field_name[1] == "neq" :
+                    q = " {} != {} ".format( field_name[0], v)
+                
+                
+                elif field_name[1] == "in":
+                    q = " {} in {} ".format(field_name[0],tuple(v))
+                        
+                        
+                elif field_name[1] == "contains" :
+                    q = " {} Like '%{}%' ".format(field_name[0],(v))
+                        
+                l.append(q)
+        
+            z = "and".join(l)
+            query = ' '+z
+        return query
+    
+    @classmethod
+    def avg(cls, field, **keys):
+        if field not in ('age', 'name', 'score', 'student_id'):
+            raise InvalidField
+        
+        if len(keys) == 0:
+            q = "Select avg({}) From Student".format(field)
+            
+        
+        else:
+            k = Student.filter(**keys)
+            q = "Select AVG({}) from Student where {}".format(field,k)
+        
+        result =read_data(q)
+        return result[0][0]
+                        
+                                         
+    @classmethod
+    def min(cls, field, **keys):
+        if field not in ('age', 'name', 'score', 'student_id'):
+            raise InvalidField
+        
+        if len(keys) == 0:
+            q = "Select min({}) From Student".format(field)
+        
+        
+        else:
+            k = Student.filter(**keys)
+            q = "Select MIN({}) from Student where {}".format(field,k)
+        
+        result =read_data(q)
+        return result[0][0]
+                
+    
+    @classmethod
+    def max(cls, field, **keys):
+        if field not in ('age', 'name', 'score', 'student_id'):
+            raise InvalidField
+        
+        if len(keys) == 0:
+            q = "Select MAX({}) From Student".format(field)
+            
+        
+        else:
+            k = Student.filter(**keys)
+            q = "Select MAX({}) from Student where {}".format(field,k)
+        
+        result =read_data(q)
+        return result[0][0]
+                
+    @classmethod
+    def sum(cls, field, **keys):
+        if field not in ('age', 'name', 'score', 'student_id'):
+            raise InvalidField
+        
+        if len(keys) == 0:
+            q = "Select SUM({}) From Student".format(field)
+            
+        
+        else:
+            k = Student.filter(**keys)
+            q = "Select SUM({}) from Student where {}".format(field,k)
+        
+        result =read_data(q)
+        return result[0][0]
+                
+    
+    @classmethod
+    def count(cls, field = None, **keys):
+        
+        if field == None:
+            q = "select count(*) From Student"
+            
+        elif field not in ('age', 'name', 'score', 'student_id'):
+            raise InvalidField
+        
+        elif len(keys) == 0:
+            q = "Select COUNT({}) From Student".format(field)
+            
+            
+        else:
+            k = Student.filter(**keys)
+            q = "Select COUNT({}) from Student where {}".format(field,k)
+        
+        result =read_data(q)
+        return result[0][0]
+                
+                
+    
+    
+
+def write_data(sql_query):
+	import sqlite3
+	connection = sqlite3.connect("tudents.sqlite3")
+	crsr = connection.cursor() 
+	crsr.execute("PRAGMA foreign_keys=on;") 
+	crsr.execute(sql_query) 
+	connection.commit() 
+	connection.close()
+
+def read_data(sql_query):
+	import sqlite3
+	connection = sqlite3.connect("students.sqlite3")
+	crsr = connection.cursor() 
+	crsr.execute(sql_query) 
+	ans= crsr.fetchall()  
+	connection.close() 
+	return ans
+
+
